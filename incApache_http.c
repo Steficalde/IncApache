@@ -184,8 +184,7 @@ void send_response(int client_fd, int response_code, int cookie,
 
         /*** TO BE OPTIONALLY CHANGED START ***/
         // add POST
-        strcat(http_header,
-               "501 Method Not Implemented\r\nAllow: HEAD,GET,POST");
+        strcat(http_header, "501 Method Not Implemented\r\nAllow: HEAD,GET");
         /*** TO BE OPTIONALLY CHANGED END ***/
 
         if ((fd = open(HTML_501, O_RDONLY)) >= 0) {
@@ -400,8 +399,6 @@ void manage_http_requests(int client_fd
                         option_val = strtok_r(NULL, "\r\n", &strtokr_save);
                         strptime(option_val, "%a, %d %b %Y %T GMT", &since_tm);
                         http_method |= METHOD_CONDITIONAL;
-
-                        debug("METHOD_CONDITIONAL\n");
                     }
                     /*** TO BE DONE 8.0 END ***/
                 }
@@ -423,7 +420,7 @@ void manage_http_requests(int client_fd
             UIDcookie = get_new_UID();
 
         /*** TO BE OPTIONALLY CHANGED START ***/
-        if (http_method == METHOD_NONE /* ||http_method == METHOD_POST*/) {
+        if (http_method == METHOD_NONE || http_method == METHOD_POST) {
             /*** TO BE OPTIONALLY CHANGED END ***/
 
             printf("method not implemented\n");

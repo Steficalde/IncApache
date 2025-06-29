@@ -89,22 +89,50 @@ void join_all_threads(int conn_no) {
      *** no_free_threads, no_response_threads[conn_no], and
      *** connection_no[i] ***/
     /*** TO BE DONE 8.1 START ***/
+    pthread_t *thread_to_join_ptr;
 
-    pthread_mutex_lock(&threads_mutex);
+    // Loop as long as there are threads in the join list for this connection.
+    while (1) {
+        pthread_mutex_lock(&threads_mutex);
 
-    // Prende l'ID dell'ultimo thread nella catena per questa connessione.
-    pthread_t *last_thread_id_p = to_join[conn_no];
+        // Get the head of the list for the current connection.
+        thread_to_join_ptr = to_join[conn_no];
 
-    if (last_thread_id_p != NULL) {
-        // Se c'è almeno un thread worker da attendere...
+        if (thread_to_join_ptr == NULL) {
+            // The list is empty; no more threads to join.
+            pthread_mutex_unlock(&threads_mutex);
+            break;
+        }
+
+        // Find the index 'i' of the thread we are about to join.
+        // Response threads are in the range [MAX_CONNECTIONS, MAX_THREADS).
+        for (i = MAX_CONNECTIONS; i < MAX_THREADS; ++i) {
+            if (&thread_ids[i] == thread_to_join_ptr) {
+                break;
+            }
+        }
+
+        // This assertion ensures data structure integrity.
+        assert(i < MAX_THREADS);
+
+        // Unlink the thread from the head of the list.
+        // The next thread in the chain is pointed to by to_join[i].
+        to_join[conn_no] = to_join[i];
+
+        // Unlock the mutex before the blocking call to pthread_join.
         pthread_mutex_unlock(&threads_mutex);
 
-        // Attende la terminazione dell'ultimo thread.
-        // Questo garantisce che tutti i thread precedenti abbiano finito.
-        pthread_join(*last_thread_id_p, NULL);
+        pthread_join(*thread_to_join_ptr, NULL);
 
-    } else {
-        // Non ci sono thread worker in esecuzione per questa connessione.
+        // Re-lock the mutex to safely update the shared variables.
+        pthread_mutex_lock(&threads_mutex);
+
+        // Update shared variables as instructed.
+        no_free_threads++;
+        no_response_threads[conn_no]--;
+        connection_no[i] = FREE_SLOT;
+        to_join[i] = NULL; // Clean up the pointer for the joined thread.
+
         pthread_mutex_unlock(&threads_mutex);
     }
     /*** TO BE DONE 8.1 END ***/
@@ -122,17 +150,43 @@ void join_prev_thread(int thrd_no) {
      *** no_free_threads, no_response_threads[conn_no], and connection_no[i],
      *** avoiding race conditions ***/
     /*** TO BE DONE 8.1 START ***/
-    pthread_mutex_lock(&threads_mutex);
-    pthread_t *prev_thread_id_p = to_join[thrd_no];
 
-    if (prev_thread_id_p != NULL) {
-        // C'è un thread precedente da attendere
+    pthread_t *thread_to_join_ptr;
+    pthread_mutex_lock(&threads_mutex);
+
+    // Get the pointer to the previous thread in the pipeline.
+    thread_to_join_ptr = to_join[thrd_no];
+
+    if (thread_to_join_ptr != NULL) {
+        // A previous thread exists, so we must join it first.
+
+        // Find the index 'i' of the thread to join.
+        for (i = MAX_CONNECTIONS; i < MAX_THREADS; ++i) {
+            if (&thread_ids[i] == thread_to_join_ptr) {
+                break;
+            }
+        }
+        assert(i < MAX_THREADS);
+
+        // Get the connection number associated with the thread we are about to
+        // join.
+        conn_no = connection_no[i];
+
+        // Unlock the mutex before the blocking call.
         pthread_mutex_unlock(&threads_mutex);
-        pthread_join(*prev_thread_id_p, NULL);
-    } else {
-        // Questo è il primo thread della catena, non deve aspettare nessuno
-        pthread_mutex_unlock(&threads_mutex);
+
+        pthread_join(*thread_to_join_ptr, NULL);
+
+        // Lock again to safely update shared state.
+        pthread_mutex_lock(&threads_mutex);
+
+        // Update shared variables for the now-joined thread.
+        no_free_threads++;
+        no_response_threads[conn_no]--;
+        connection_no[i] = FREE_SLOT;
     }
+
+    pthread_mutex_unlock(&threads_mutex);
     /*** TO BE DONE 8.1 END ***/
 }
 
