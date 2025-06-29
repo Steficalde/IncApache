@@ -1,4 +1,4 @@
-/* 
+/*
  * incApache_aux.c: funzioni ausiliarie per il web server
  *
  * Programma sviluppato a supporto del laboratorio di
@@ -18,82 +18,82 @@
 
 #include "incApache.h"
 
-void fail(const char *const msg)
-{
-	fprintf(stderr, "%s\n", msg);
-	exit(EXIT_FAILURE);
+void fail(const char *const msg) {
+    fprintf(stderr, "%s\n", msg);
+    exit(EXIT_FAILURE);
 }
 
-void fail_errno(const char *const msg)
-{
-	perror(msg);
-	exit(EXIT_FAILURE);
+void fail_errno(const char *const msg) {
+    perror(msg);
+    exit(EXIT_FAILURE);
 }
 
-void *my_malloc(size_t size)
-{
-	void *result = malloc(size);
-	if (result == NULL)
-		fail("Cannot allocate memory with malloc");
-	return result;
+void *my_malloc(size_t size) {
+    void *result = malloc(size);
+    if (result == NULL)
+        fail("Cannot allocate memory with malloc");
+    return result;
 }
 
-char *my_strdup(const char *const s)
-{
-	char *result = strdup(s);
-	if (result == NULL)
-		fail("Cannot allocate memory for strdup");
-	return result;
+char *my_strdup(const char *const s) {
+    char *result = strdup(s);
+    if (result == NULL)
+        fail("Cannot allocate memory for strdup");
+    return result;
 }
 
-ssize_t send_all(int fd, const char *ptr, size_t n, int flags)
-{
-	size_t n_left = n;
-	while (n_left > 0) {
-		ssize_t n_written = send(fd, ptr, n_left, flags);
-		if (n_written < 0) {
-			if (n_left == n)
-				return -1; /* nothing has been sent */
-			else
-				break; /* we have sent something */
-		} else if (n_written == 0) {
-			break;
-		}
-		n_left -= n_written;
-		ptr += n_written;
-	}
-	assert(n - n_left >= 0);
-	return n - n_left;
+ssize_t send_all(int fd, const char *ptr, size_t n, int flags) {
+    size_t n_left = n;
+    while (n_left > 0) {
+        ssize_t n_written = send(fd, ptr, n_left, flags);
+        if (n_written < 0) {
+            if (n_left == n)
+                return -1; /* nothing has been sent */
+            else
+                break; /* we have sent something */
+        } else if (n_written == 0) {
+            break;
+        }
+        n_left -= n_written;
+        ptr += n_written;
+    }
+    assert(n - n_left >= 0);
+    return n - n_left;
 }
-
 
 static pthread_mutex_t my_timegm_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-time_t my_timegm(struct tm *tm)
-{
-               time_t ret;
-               char *tz;
+time_t my_timegm(struct tm *tm) {
+    time_t ret;
+    char *tz;
 
-        /*** Guess what is missing here ... ***/
-/*** TO BE DONE 8.0 START ***/
+    /*** Guess what is missing here ... ***/
+    /*** TO BE DONE 8.0 START ***/
+    pthread_mutex_lock(&my_timegm_mutex);
+    tz = getenv("TZ");
+    if (tz) {
+        tz = my_strdup(tz);
+    } else {
+        // which sets the timezone to our fallback and correctly frees the
+        // memory.
+        tz = my_strdup("Europe/Rome");
+    }
+    /*** TO BE DONE 8.0 END ***/
 
+    setenv("TZ", "", 1);
+    tzset();
+    ret = mktime(tm);
+    if (tz) {
+        setenv("TZ", tz, 1);
+        free(tz);
+    } else
+        unsetenv("TZ");
 
-/*** TO BE DONE 8.0 END ***/
+    /*** Guess what is missing here ... ***/
+    /*** TO BE DONE 8.0 START ***/
+    pthread_mutex_unlock(&my_timegm_mutex);
 
-               setenv("TZ", "", 1);
-               tzset();
-               ret = mktime(tm);
-               if (tz) {
-                   setenv("TZ", tz, 1);
-                   free(tz);
-               } else
-                   unsetenv("TZ");
+    /*** TO BE DONE 8.0 END ***/
 
-        /*** Guess what is missing here ... ***/
-/*** TO BE DONE 8.0 START ***/
-
-
-/*** TO BE DONE 8.0 END ***/
-
-               return ret;
+    return ret;
 }

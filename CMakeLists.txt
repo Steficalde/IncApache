@@ -15,7 +15,7 @@ add_definitions(
         -DIMAGE="uncadunca.jpg"
         -DSTYLE="000_style.css"
         -DPRETEND_TO_BE_ROOT
-        #-DINCaPACHE_2_1
+        -DINCaPACHE_2_1
         )
 
 add_executable(incapache ${SOURCE_FILES})
