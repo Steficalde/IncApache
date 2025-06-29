@@ -21,7 +21,6 @@
 #define DEBUG
 ***/
 
-#include <ctime>
 #define COOKIE_EXPIRE "; Expires=Wed, 31 Dec 2025 23:59:59 GMT"
 
 #include "incApache.h"
