@@ -25,65 +25,67 @@
 #define debug(...)
 #endif
 
-#define _XOPEN_SOURCE 500 /* glibc2 needs this */
-#define _BSD_SOURCE /* glibc2 needs this */
+#define _XOPEN_SOURCE 500      /* glibc2 needs this */
+#define _BSD_SOURCE            /* glibc2 needs this */
 #define _XOPEN_SOURCE_EXTENDED /* glibc2 needs this */
 
-#include <stdio.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/sendfile.h>
+#include <arpa/inet.h>
+#include <assert.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <libgen.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <dirent.h>
-#include <libgen.h>
 #include <pthread.h>
-#include <errno.h>
-#include <assert.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/sendfile.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 
 #define MAX_CONNECTIONS 4
 #define MAX_COOKIES 256
 
 #ifdef INCaPACHE_8_1
 
-#    define FREE_SLOT (-1)
-#    define RESERVED_SLOT (-2)
+#define FREE_SLOT (-1)
+#define RESERVED_SLOT (-2)
 
-#    define MAX_THREADS (4*MAX_CONNECTIONS) /*** this should be > 2*MAXCONNECTION ***/
-#    define SEND_RESPONSE send_resp_thread
-    struct response_params {
-	int code;
-	int cookie;
-	int is_http1_0;
-	char *filename;
-	struct stat *p_stat;
-    };
+#define MAX_THREADS                                                            \
+    (4 * MAX_CONNECTIONS) /*** this should be > 2*MAXCONNECTION ***/
+#define SEND_RESPONSE send_resp_thread
+struct response_params {
+        int code;
+        int cookie;
+        int is_http1_0;
+        char *filename;
+        struct stat *p_stat;
+};
 
-    extern int client_sockets[];
-    extern pthread_t *to_join[];
-    extern pthread_mutex_t threads_mutex;
-    extern int no_response_threads[];
-    extern int no_free_threads;
-    extern struct response_params thread_params[];
-    extern int find_unused_thread_idx(int conn_no);
-    extern void join_all_threads(int conn_no);
-    extern void join_prev_thread(int thrd_no);
-    extern void send_resp_thread(int out_socket, int response_code, int cookie,
-			     int is_http1_0, int connection_idx, int new_thread_idx,
-			     char *filename, struct stat *stat_p);
+extern int client_sockets[];
+extern pthread_t *to_join[];
+extern pthread_mutex_t threads_mutex;
+extern int no_response_threads[];
+extern int no_free_threads;
+extern struct response_params thread_params[];
+extern int find_unused_thread_idx(int conn_no);
+extern void join_all_threads(int conn_no);
+extern void join_prev_thread(int thrd_no);
+extern void send_resp_thread(int out_socket, int response_code, int cookie,
+                             int is_http1_0, int connection_idx,
+                             int new_thread_idx, char *filename,
+                             struct stat *stat_p);
 
 #else /* #ifdef INCaPACHE_8_1 */
 
-#    define SEND_RESPONSE send_response
+#define SEND_RESPONSE send_response
 
 #endif /* #ifdef INCaPACHE_8_1 */
 
@@ -112,15 +114,14 @@ extern char *get_mime_type(char *filename);
 
 extern void send_response(int client_fd, int response_code, int cookie,
 #ifdef INCaPACHE_8_1
-			  int is_http1_0, int thread_no,
+                          int is_http1_0, int thread_no,
 #endif
-			  char *filename, struct stat *stat_p);
+                          char *filename, struct stat *stat_p);
 extern void manage_http_requests(int client_fd
 #ifdef INCaPACHE_8_1
-		, int connection_no
+                                 ,
+                                 int connection_no
 #endif
 );
 
-
 #endif /* #ifndef incApache_h */
-

@@ -73,10 +73,6 @@ time_t my_timegm(struct tm *tm) {
     tz = getenv("TZ");
     if (tz) {
         tz = my_strdup(tz);
-    } else {
-        // which sets the timezone to our fallback and correctly frees the
-        // memory.
-        tz = my_strdup("Europe/Rome");
     }
     /*** TO BE DONE 8.0 END ***/
 
