@@ -124,30 +124,23 @@ void join_prev_thread(int thrd_no) {
      *** avoiding race conditions ***/
     /*** TO BE DONE 8.1 START ***/
 
-    pthread_t *thread_to_join_ptr;
     pthread_mutex_lock(&threads_mutex);
 
-    thread_to_join_ptr = to_join[thrd_no];
+    if (to_join[thrd_no] != NULL) {
 
-    if (thread_to_join_ptr != NULL) {
+        conn_no = connection_no[thrd_no];
 
-        for (i = MAX_CONNECTIONS; i < MAX_THREADS; ++i) {
-            if (&thread_ids[i] == thread_to_join_ptr) {
-                break;
-            }
-        }
-        conn_no = connection_no[i];
+        i = to_join[thrd_no] - thread_ids;
 
         pthread_mutex_unlock(&threads_mutex);
 
-        pthread_join(*thread_to_join_ptr, NULL);
+        pthread_join(thread_ids[i], NULL);
 
         pthread_mutex_lock(&threads_mutex);
 
         no_free_threads++;
         no_response_threads[conn_no]--;
         connection_no[i] = FREE_SLOT;
-        to_join[i] = NULL;
     }
 
     pthread_mutex_unlock(&threads_mutex);
