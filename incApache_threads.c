@@ -89,23 +89,17 @@ void join_all_threads(int conn_no) {
      *** no_free_threads, no_response_threads[conn_no], and
      *** connection_no[i] ***/
     /*** TO BE DONE 8.1 START ***/
+
+    if (!to_join[conn_no])
+        return;
+
+    i = to_join[conn_no] - thread_ids;
+    pthread_join(thread_ids[i], NULL);
+
     pthread_mutex_lock(&threads_mutex);
-
-    for (i = MAX_CONNECTIONS; i < MAX_THREADS; i++) {
-        if (connection_no[i] == conn_no && to_join[i] != NULL) {
-
-            pthread_mutex_unlock(&threads_mutex);
-
-            pthread_join(thread_ids[i], NULL);
-
-            pthread_mutex_lock(&threads_mutex);
-
-            no_free_threads++;
-            no_response_threads[conn_no]--;
-            connection_no[i] = FREE_SLOT;
-            to_join[i] = NULL;
-        }
-    }
+    no_free_threads++;
+    connection_no[i] = FREE_SLOT;
+    no_response_threads[conn_no]--;
 
     pthread_mutex_unlock(&threads_mutex);
     /*** TO BE DONE 8.1 END ***/
