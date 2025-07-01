@@ -90,9 +90,10 @@ void join_all_threads(int conn_no) {
      *** connection_no[i] ***/
     /*** TO BE DONE 8.1 START ***/
 
-    for (i = MAX_CONNECTIONS; i < MAX_THREADS; i++) {
 
-        pthread_join(thread_ids[i], NULL);
+    pthread_mutex_lock(&threads_mutex);
+    for (i = 0; i < MAX_THREADS; i++) {
+
         if (connection_no[i] == conn_no) {
 
             pthread_mutex_lock(&threads_mutex);
