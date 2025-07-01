@@ -147,7 +147,7 @@ void join_prev_thread(int thrd_no) {
         no_free_threads++;
         no_response_threads[conn_no]--;
         connection_no[i] = FREE_SLOT;
-        to_join[i] = NULLL;
+        to_join[i] = NULL;
     }
 
     pthread_mutex_unlock(&threads_mutex);
