@@ -89,12 +89,13 @@ void join_all_threads(int conn_no) {
      *** no_free_threads, no_response_threads[conn_no], and
      *** connection_no[i] ***/
     /*** TO BE DONE 8.1 START ***/
-    pthread_mutex_lock(&threads_mutex);
 
     for (i = MAX_CONNECTIONS; i < MAX_THREADS; i++) {
+
+        pthread_join(thread_ids[i], NULL);
         if (connection_no[i] == conn_no) {
 
-            pthread_mutex_unlock(&threads_mutex);
+            pthread_mutex_lock(&threads_mutex);
 
             pthread_join(thread_ids[i], NULL);
 
