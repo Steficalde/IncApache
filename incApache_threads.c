@@ -96,7 +96,7 @@ void join_all_threads(int conn_no) {
 
         if (connection_no[i] == conn_no) {
 
-            pthread_mutex_lock(&threads_mutex);
+            pthread_mutex_unlock(&threads_mutex);
 
             pthread_join(thread_ids[i], NULL);
 
